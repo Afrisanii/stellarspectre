@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useWallet } from "../context/WalletContext";
+import { useAuth, computeLevel } from "../context/AuthContext";
 import { hasAccess, getPlan } from "../lib/plans";
 
 const SPACES = [
@@ -84,21 +85,41 @@ const MSG_TYPE_COLOR = { text: "", question: "msg-question", announcement: "msg-
 
 export default function Spaces() {
   const { address, tokens, connect, plan, setStatus } = useWallet();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const canCreateGated = hasAccess(plan || "base", "luminary");
   const [activeSpace, setActiveSpace] = useState(null);
   const [msgInput, setMsgInput]       = useState("");
 
-  const nftCount = tokens.length;
+  const nftCount   = tokens.length;
+  const authLevel  = computeLevel(user, address, plan);
 
+  // The Commons (requirement: 0) needs Level 1 (signed in)
+  // All other spaces need wallet + NFT holdings (Level 3+)
   function canEnter(space) {
-    return !!address && nftCount >= space.requirement;
+    if (space.requirement === 0) return authLevel >= 1;
+    return authLevel >= 3 && nftCount >= space.requirement;
   }
 
   function accessLabel(space) {
-    if (!address)                         return "Connect wallet";
-    if (nftCount >= space.requirement)    return "Enter Space";
+    if (space.requirement === 0) {
+      if (!user)    return "Sign in to enter";
+      return "Enter Space";
+    }
+    if (!user)    return "Sign in to enter";
+    if (!address) return "Connect wallet to enter";
+    if (nftCount >= space.requirement) return "Enter Space";
     return `Locked — need ${space.requirement - nftCount} more NFT${space.requirement - nftCount !== 1 ? "s" : ""}`;
+  }
+
+  function handleEnterClick(space) {
+    if (space.requirement === 0 && !user) {
+      navigate("/auth");
+      return;
+    }
+    if (!user) { navigate("/auth"); return; }
+    if (!address) { connect().catch(() => {}); return; }
+    if (canEnter(space)) setActiveSpace(space);
   }
 
   if (activeSpace) {
@@ -155,10 +176,10 @@ export default function Spaces() {
 
       <div className="spaces-grid">
         {SPACES.map((space) => {
-          const unlocked = canEnter(space);
+          const entered = canEnter(space);
           return (
-            <div key={space.id} className={`space-card${unlocked ? " unlocked" : " locked"}`}>
-              {!unlocked && <div className="space-lock"><span>🔒</span></div>}
+            <div key={space.id} className={`space-card${entered ? " unlocked" : " locked"}`}>
+              {!entered && <div className="space-lock"><span>🔒</span></div>}
               <div className="space-card-top">
                 <span className="space-icon" style={{ color: space.color }}>{space.icon}</span>
                 <div className="space-meta">
@@ -180,9 +201,8 @@ export default function Spaces() {
                 ))}
               </div>
               <button
-                className={unlocked ? "btn-cta" : "btn-ghost"}
-                disabled={!unlocked && !!address}
-                onClick={() => unlocked ? setActiveSpace(space) : !address && connect().catch(() => {})}
+                className={canEnter(space) ? "btn-cta" : "btn-ghost"}
+                onClick={() => handleEnterClick(space)}
               >
                 {accessLabel(space)}
               </button>

@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "./context/AuthContext";
 import { WalletProvider } from "./context/WalletContext";
 import Navbar from "./components/Navbar";
 import StatusBar from "./components/StatusBar";
@@ -9,25 +10,29 @@ import Dashboard from "./pages/Dashboard";
 import Profile from "./pages/Profile";
 import HowTo from "./pages/HowTo";
 import Pricing from "./pages/Pricing";
+import Auth from "./pages/Auth";
 import "./App.css";
 
 export default function App() {
   return (
-    <WalletProvider>
-      <BrowserRouter>
-        <Navbar />
-        <StatusBar />
-        <Routes>
-          <Route path="/"          element={<Home />} />
-          <Route path="/explore"   element={<Explore />} />
-          <Route path="/spaces"    element={<Spaces />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/profile"   element={<Profile />} />
-          <Route path="/profile/:addr" element={<Profile />} />
-          <Route path="/how-to"        element={<HowTo />} />
-          <Route path="/pricing"       element={<Pricing />} />
-        </Routes>
-      </BrowserRouter>
-    </WalletProvider>
+    <AuthProvider>
+      <WalletProvider>
+        <BrowserRouter>
+          <Navbar />
+          <StatusBar />
+          <Routes>
+            <Route path="/"              element={<Home />} />
+            <Route path="/auth"          element={<Auth />} />
+            <Route path="/explore"       element={<Explore />} />
+            <Route path="/spaces"        element={<Spaces />} />
+            <Route path="/dashboard"     element={<Dashboard />} />
+            <Route path="/profile"       element={<Profile />} />
+            <Route path="/profile/:addr" element={<Profile />} />
+            <Route path="/how-to"        element={<HowTo />} />
+            <Route path="/pricing"       element={<Pricing />} />
+          </Routes>
+        </BrowserRouter>
+      </WalletProvider>
+    </AuthProvider>
   );
 }

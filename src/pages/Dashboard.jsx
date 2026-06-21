@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useWallet } from "../context/WalletContext";
+import { useAuth, computeLevel, getLevelInfo } from "../context/AuthContext";
 import NFTCard from "../components/NFTCard";
 import { getPerms, getPlan } from "../lib/plans";
 import { mint, transfer } from "../stellar";
@@ -107,13 +108,18 @@ function UpgradeGate({ feature, requiredPlan }) {
 
 // ── Connect prompt ───────────────────────────────────────────────────────────
 
-function ConnectPrompt({ connect }) {
+function ConnectPrompt({ connect, level, levelInfo }) {
   return (
     <div className="page dash-connect">
       <div className="connect-card">
         <span className="connect-icon">◈</span>
-        <h2>Connect your wallet</h2>
-        <p>You need a Freighter wallet to access your dashboard.</p>
+        <div style={{ display: "flex", alignItems: "center", gap: ".6rem", justifyContent: "center" }}>
+          <h2>Connect your wallet</h2>
+          <span className="badge" style={{ background: `${levelInfo?.color}18`, color: levelInfo?.color, border: `1px solid ${levelInfo?.color}44` }}>
+            Level {level} — {levelInfo?.label}
+          </span>
+        </div>
+        <p>Link your Freighter wallet to unlock Level 3 — enabling NFT transfers, your gallery, and the full Dashboard.</p>
         <button className="btn-cta" onClick={async () => { try { await connect(); } catch {} }}>
           Connect Freighter
         </button>
@@ -780,6 +786,10 @@ function CollectorDashboard({ address, tokens, busy, setBusy, setStatus, refresh
 
 export default function Dashboard() {
   const { address, tokens, busy, setBusy, setStatus, refreshTokens, connect, plan } = useWallet();
+  const { user } = useAuth();
+
+  const level     = computeLevel(user, address, plan);
+  const levelInfo = getLevelInfo(level);
 
   const [role, setRole] = useState(() => localStorage.getItem("morianah_role"));
   const [activeRole, setActiveRole] = useState(() => {
@@ -798,7 +808,22 @@ export default function Dashboard() {
     setRole(null);
   }
 
-  if (!address) return <ConnectPrompt connect={connect} />;
+  // Must be signed in first
+  if (!user) {
+    return (
+      <div className="page dash-connect">
+        <div className="connect-card">
+          <span className="connect-icon">◈</span>
+          <h2>Sign in to continue</h2>
+          <p>Create a free account or sign in to access your dashboard.</p>
+          <Link to="/auth?mode=signup" className="btn-cta">Create Account</Link>
+          <p className="connect-hint">Already have an account? <Link to="/auth" className="cyan">Sign in ↗</Link></p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!address) return <ConnectPrompt connect={connect} level={level} levelInfo={levelInfo} />;
   if (!role)    return <RoleSelect onSelect={selectRole} />;
 
   const shared = { address, tokens, busy, setBusy, setStatus, refreshTokens, plan };
