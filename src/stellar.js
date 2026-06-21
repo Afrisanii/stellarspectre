@@ -31,7 +31,8 @@ const server = new rpc.Server(RPC_URL);
 
 // ---- Wallet ----
 export async function connectWallet() {
-  if (!(await isConnected())) {
+  const { isConnected: connected } = await isConnected();
+  if (!connected) {
     throw new Error("Freighter not installed. Install it from freighter.app");
   }
   await requestAccess();

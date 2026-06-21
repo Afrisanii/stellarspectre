@@ -240,6 +240,7 @@ function DashHeader({ role, activeRole, setActiveRole, onChangeRole, address, to
 function CreatorDashboard({ address, tokens, busy, setBusy, setStatus, refreshTokens, plan }) {
   const [tab, setTab]             = useState("mint");
   const [file, setFile]           = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(null);
   const [nftName, setNftName]     = useState("");
   const [description, setDescription] = useState("");
 
@@ -278,6 +279,7 @@ function CreatorDashboard({ address, tokens, busy, setBusy, setStatus, refreshTo
       const id = await mint(address, tokenUri);
       setStatus(`Minted token #${id} ✓`);
       setFile(null); setNftName(""); setDescription("");
+      if (previewUrl) { URL.revokeObjectURL(previewUrl); setPreviewUrl(null); }
       await refreshTokens();
     } catch (e) { setStatus(`Mint failed: ${e.message}`); }
     finally { setBusy(false); }
@@ -315,8 +317,26 @@ function CreatorDashboard({ address, tokens, busy, setBusy, setStatus, refreshTo
           <h3>Create a new NFT</h3>
           <label className="file-drop">
             <span>{file ? `✓  ${file.name}` : "Click to choose an image  (PNG, JPG, GIF, SVG)…"}</span>
-            <input type="file" accept="image/*" onChange={(e) => setFile(e.target.files[0])} />
+            <input type="file" accept="image/*" onChange={(e) => {
+              const f = e.target.files[0];
+              if (!f) return;
+              setFile(f);
+              if (previewUrl) URL.revokeObjectURL(previewUrl);
+              setPreviewUrl(URL.createObjectURL(f));
+            }} />
           </label>
+          {previewUrl && (
+            <div style={{ display: "flex", alignItems: "flex-start", gap: "1rem", marginTop: ".25rem" }}>
+              <img src={previewUrl} alt="Preview" style={{ width: 120, height: 120, objectFit: "cover", borderRadius: 8, border: "1px solid var(--border)", flexShrink: 0 }} />
+              <div style={{ fontSize: ".8rem", color: "var(--muted)", paddingTop: ".25rem" }}>
+                <div style={{ fontWeight: 600, color: "var(--text)", marginBottom: ".2rem" }}>{file.name}</div>
+                <div>{(file.size / 1024).toFixed(0)} KB · {file.type}</div>
+                <button className="btn-ghost sm" style={{ marginTop: ".5rem" }} onClick={() => { setFile(null); URL.revokeObjectURL(previewUrl); setPreviewUrl(null); }}>
+                  ✕ Remove
+                </button>
+              </div>
+            </div>
+          )}
           <input placeholder="Name *" value={nftName} onChange={(e) => setNftName(e.target.value)} />
           <textarea placeholder="Description" value={description} onChange={(e) => setDescription(e.target.value)} />
           <div className="mint-info">
@@ -602,8 +622,13 @@ function CollectorDashboard({ address, tokens, busy, setBusy, setStatus, refresh
   const portfolioValue = (tokens.length * 285).toFixed(0);
   const tier = tokens.length >= 5 ? "Studio" : tokens.length >= 3 ? "Luminary" : tokens.length >= 1 ? "Artist" : "Free";
 
+  function isValidStellarAddress(addr) {
+    return /^G[A-Z2-7]{55}$/.test(addr);
+  }
+
   async function handleTransfer() {
     if (!transferId || !transferTo) return setStatus("Token ID and recipient required");
+    if (!isValidStellarAddress(transferTo)) return setStatus("Invalid recipient — must be a Stellar address starting with G (56 characters)");
     setBusy(true);
     try {
       setStatus("Sending…");
@@ -670,7 +695,13 @@ function CollectorDashboard({ address, tokens, busy, setBusy, setStatus, refresh
             </div>
             <div>
               <label className="form-label">Recipient address</label>
-              <input placeholder="G…" value={transferTo} onChange={(e) => setTransferTo(e.target.value)} />
+              <input placeholder="G…" value={transferTo} onChange={(e) => setTransferTo(e.target.value)}
+                style={transferTo && !isValidStellarAddress(transferTo) ? { borderColor: "var(--orange)" } : {}} />
+              {transferTo && !isValidStellarAddress(transferTo) && (
+                <div style={{ fontSize: ".72rem", color: "var(--orange)", marginTop: ".25rem" }}>
+                  Must be a Stellar address starting with G (56 characters)
+                </div>
+              )}
             </div>
           </div>
           {tokens.length > 0 && (

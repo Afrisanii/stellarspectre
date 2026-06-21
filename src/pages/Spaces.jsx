@@ -83,7 +83,7 @@ const SPACES = [
 const MSG_TYPE_COLOR = { text: "", question: "msg-question", announcement: "msg-announcement", resource: "msg-resource", tip: "msg-tip", alpha: "msg-alpha" };
 
 export default function Spaces() {
-  const { address, tokens, connect, plan } = useWallet();
+  const { address, tokens, connect, plan, setStatus } = useWallet();
   const navigate = useNavigate();
   const canCreateGated = hasAccess(plan || "base", "luminary");
   const [activeSpace, setActiveSpace] = useState(null);
@@ -148,7 +148,7 @@ export default function Spaces() {
           </div>
         </div>
         {canCreateGated
-          ? <button className="btn-cta">+ Create Space</button>
+          ? <button className="btn-cta" onClick={() => setStatus("Gated Space creation is coming in Phase 2 — watch the Luminary Lounge for the launch.")}>+ Create Space</button>
           : <Link to="/pricing" className="btn-ghost sm">Upgrade to Luminary ↗</Link>
         }
       </div>

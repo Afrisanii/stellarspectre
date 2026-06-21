@@ -99,6 +99,12 @@ export default function Pricing() {
   const navigate = useNavigate();
   const [upgrading, setUpgrading] = useState(null);
   const [confirmed, setConfirmed] = useState(null);
+  const [addonToast, setAddonToast] = useState("");
+
+  function showAddonToast() {
+    setAddonToast("Add-ons launch with billing in Phase 2 — stay tuned");
+    setTimeout(() => setAddonToast(""), 2800);
+  }
 
   const currentPlanId = activePlan || "base";
 
@@ -224,7 +230,7 @@ export default function Pricing() {
               <div className="pc-addon-desc">{addon.desc}</div>
               <div className="pc-addon-footer">
                 <span className="pc-addon-price">{addon.price}</span>
-                <button className="pc-addon-btn">Add</button>
+                <button className="pc-addon-btn" onClick={showAddonToast}>Add</button>
               </div>
             </div>
           ))}
@@ -283,6 +289,9 @@ export default function Pricing() {
           </div>
         );
       })()}
+
+      {/* ── Addon toast ──────────────────────────────────────────────────── */}
+      {addonToast && <div className="pc-toast">{addonToast}</div>}
 
       {/* ── Confirmed toast ──────────────────────────────────────────────── */}
       {confirmed && (

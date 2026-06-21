@@ -68,6 +68,7 @@ img { display: block; max-width: 100%; }
 }
 .btn-cta:hover { opacity: .88; }
 .btn-cta:active { transform: scale(.97); }
+.btn-cta.sm { font-size: .75rem; padding: .38rem .85rem; border-radius: 5px; }
 
 .btn-ghost {
   display: inline-flex; align-items: center; justify-content: center;

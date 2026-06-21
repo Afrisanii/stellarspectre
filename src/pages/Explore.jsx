@@ -133,8 +133,12 @@ export default function Explore() {
                 {selected.uri && <div className="modal-row"><span>Metadata</span><a href={selected.uri} target="_blank" rel="noreferrer" className="cyan">IPFS ↗</a></div>}
               </div>
               <div className="modal-actions">
-                <button className="btn-cta" style={{ width: "100%" }}>Buy Now</button>
-                <button className="btn-outline" style={{ width: "100%" }}>Make Offer</button>
+                <button className="btn-cta" style={{ width: "100%" }} disabled>Buy Now</button>
+                <button className="btn-outline" style={{ width: "100%" }} disabled>Make Offer</button>
+                <p style={{ fontSize: ".75rem", color: "var(--muted)", textAlign: "center", marginTop: "-.1rem" }}>
+                  On-chain marketplace launching in Phase 2 — acquire via{" "}
+                  <a href="/spaces" className="cyan" onClick={() => setSelected(null)}>Community Spaces ↗</a>
+                </p>
               </div>
             </div>
           </div>
