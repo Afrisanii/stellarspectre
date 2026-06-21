@@ -1,0 +1,15 @@
+[package]
+name    = "nft_collection"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+soroban-sdk     = { version = "22" }
+stellar-access = { git = "https://github.com/OpenZeppelin/stellar-contracts", branch = "main" }
+stellar-tokens  = { git = "https://github.com/OpenZeppelin/stellar-contracts" }
+
+[dev-dependencies]
+soroban-sdk = { version = "22", features = ["testutils"] }
